@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi Sistema de Vida</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0a0b; --surface:#111113; --surface2:#18181c; --surface3:#1f1f25;
+  --border:rgba(255,255,255,0.07); --border2:rgba(255,255,255,0.12);
+  --text:#f0eee8; --text2:#888580; --text3:#555350;
+  --blue:#4a9eff; --blue-dim:rgba(74,158,255,0.12); --blue-mid:rgba(74,158,255,0.25);
+  --green:#4ecb71; --green-dim:rgba(78,203,113,0.12); --green-mid:rgba(78,203,113,0.25);
+  --amber:#f0a030; --amber-dim:rgba(240,160,48,0.12);
+  --radius:14px; --radius-sm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.6;min-height:100vh;}
+h1,h2,h3,h4{font-family:'Syne',sans-serif;}
+.app{max-width:900px;margin:0 auto;padding:32px 20px 80px;}
+
+/* HEADER */
+.header{margin-bottom:40px;}
+.header-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.header-title{font-size:clamp(28px,5vw,42px);font-weight:800;letter-spacing:-0.02em;line-height:1.1;}
+.header-title span{color:var(--blue);}
+.header-sub{font-size:13px;color:var(--text2);margin-top:8px;font-weight:300;}
+.date-badge{background:var(--surface2);border:1px solid var(--border2);border-radius:20px;padding:6px 14px;font-size:12px;color:var(--text2);white-space:nowrap;font-family:'Syne',sans-serif;}
+
+/* MONTH TABS */
+.month-nav{display:flex;gap:6px;margin-bottom:32px;flex-wrap:wrap;}
+.month-btn{padding:8px 20px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:13px;cursor:pointer;font-family:'Syne',sans-serif;font-weight:600;letter-spacing:0.04em;transition:all 0.2s;text-transform:uppercase;}
+.month-btn:hover{border-color:var(--blue);color:var(--blue);}
+.month-btn.active{background:var(--blue);border-color:var(--blue);color:#000;}
+
+/* MONTH VIEW */
+.month-view{display:none;animation:fadeIn 0.25s ease;}
+.month-view.show{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+/* SECTION */
+.section{margin-bottom:28px;}
+.section-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.section-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.icon-blue{background:var(--blue-dim);}
+.icon-green{background:var(--green-dim);}
+.icon-amber{background:var(--amber-dim);}
+.section-title{font-size:16px;font-weight:700;font-family:'Syne',sans-serif;}
+.section-meta{font-size:12px;color:var(--text2);margin-left:auto;}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:12px;transition:border-color 0.2s;}
+.card:hover{border-color:var(--border2);}
+.card-title{font-size:12px;font-weight:500;color:var(--text3);margin-bottom:14px;text-transform:uppercase;letter-spacing:0.06em;font-family:'Syne',sans-serif;}
+
+/* OBJECTIVES - editable + toggle */
+.obj-list{display:flex;flex-direction:column;gap:4px;}
+.obj-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:var(--radius-sm);border:1px solid transparent;transition:background 0.15s;}
+.obj-item:hover{background:var(--surface2);}
+.obj-item.checked .obj-text{text-decoration:line-through;color:var(--text3);}
+
+.chk{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--border2);background:transparent;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;cursor:pointer;}
+.chk svg{display:none;width:10px;height:10px;}
+.chk.on{border-color:transparent;}
+.chk.on svg{display:block;}
+.chk.blue.on{background:var(--blue);}
+.chk.green.on{background:var(--green);}
+.chk.amber.on{background:var(--amber);}
+
+.obj-content{flex:1;min-width:0;}
+.obj-text{font-size:14px;color:var(--text);font-weight:400;outline:none;border:none;background:transparent;width:100%;font-family:'DM Sans',sans-serif;cursor:text;border-radius:4px;padding:1px 4px;margin-left:-4px;transition:background 0.15s;resize:none;display:block;line-height:1.4;}
+.obj-text:focus{background:var(--surface3);color:var(--text);}
+.obj-detail{font-size:12px;color:var(--text3);margin-top:2px;outline:none;border:none;background:transparent;width:100%;font-family:'DM Sans',sans-serif;cursor:text;padding:1px 4px;margin-left:-4px;border-radius:4px;}
+.obj-detail:focus{background:var(--surface3);color:var(--text2);}
+
+.add-obj-btn{margin-top:8px;padding:8px 12px;background:transparent;border:1px dashed var(--border2);border-radius:var(--radius-sm);color:var(--text3);font-size:13px;cursor:pointer;width:100%;text-align:left;transition:all 0.15s;font-family:'DM Sans',sans-serif;}
+.add-obj-btn:hover{border-color:var(--blue);color:var(--blue);}
+
+.del-btn{width:18px;height:18px;border-radius:4px;background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;opacity:0;transition:opacity 0.15s;}
+.obj-item:hover .del-btn{opacity:1;}
+.del-btn:hover{color:var(--red);}
+
+/* PROGRESS */
+.progress-section{margin-top:16px;padding-top:14px;border-top:1px solid var(--border);}
+.progress-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.progress-label{font-size:12px;color:var(--text2);}
+.progress-pct{font-size:13px;font-weight:600;font-family:'Syne',sans-serif;}
+.pct-blue{color:var(--blue);} .pct-green{color:var(--green);} .pct-amber{color:var(--amber);}
+.track{height:4px;background:var(--surface3);border-radius:99px;overflow:hidden;}
+.fill{height:100%;border-radius:99px;transition:width 0.4s cubic-bezier(0.4,0,0.2,1);}
+.fill-blue{background:var(--blue);} .fill-green{background:var(--green);} .fill-amber{background:var(--amber);}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:20px;}
+.stat-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;}
+.stat-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;font-family:'Syne',sans-serif;margin-bottom:6px;}
+.stat-value{font-size:22px;font-weight:800;font-family:'Syne',sans-serif;}
+.stat-value.blue{color:var(--blue);} .stat-value.green{color:var(--green);} .stat-value.amber{color:var(--amber);}
+.stat-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+
+/* WORKOUT */
+.workout-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;}
+.workout-day{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;}
+.workout-day-title{font-size:12px;font-weight:700;font-family:'Syne',sans-serif;color:var(--text);text-transform:uppercase;letter-spacing:0.05em;}
+.workout-day-focus{font-size:11px;color:var(--blue);margin-bottom:12px;margin-top:2px;}
+.exercise-row{display:flex;flex-direction:column;gap:2px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.exercise-row:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+.ex-name{font-size:13px;color:var(--text);font-weight:500;}
+.ex-sets{font-size:11px;color:var(--text3);}
+.ex-weight-row{display:flex;align-items:center;gap:6px;margin-top:4px;}
+.ex-weight-label{font-size:11px;color:var(--text3);}
+.ex-weight-input{background:var(--surface3);border:1px solid var(--border2);border-radius:6px;padding:3px 8px;font-size:12px;color:var(--text);font-family:'DM Sans',sans-serif;width:80px;outline:none;}
+.ex-weight-input:focus{border-color:var(--blue);}
+.ex-weight-unit{font-size:11px;color:var(--text3);}
+
+/* HABIT TRACKER */
+.habit-tracker-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;}
+.habit-tracker-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:8px;}
+.habit-tracker-title{font-size:14px;font-weight:700;font-family:'Syne',sans-serif;}
+.month-selector{display:flex;align-items:center;gap:8px;}
+.month-arrow{background:var(--surface2);border:1px solid var(--border2);border-radius:6px;width:28px;height:28px;cursor:pointer;color:var(--text2);font-size:14px;display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
+.month-arrow:hover{border-color:var(--blue);color:var(--blue);}
+.month-display{font-size:13px;color:var(--text2);font-family:'Syne',sans-serif;min-width:100px;text-align:center;}
+
+.habit-grid-wrap{overflow-x:auto;}
+.habit-table{width:100%;border-collapse:collapse;min-width:500px;}
+.habit-table th{font-size:11px;color:var(--text3);font-weight:500;padding:4px 6px;text-align:center;font-family:'Syne',sans-serif;}
+.habit-table th.habit-name-col{text-align:left;min-width:100px;}
+.habit-table td{padding:3px 4px;text-align:center;}
+.habit-table td.day-label{font-size:11px;color:var(--text3);padding:4px 6px;}
+
+.habit-dot{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border2);background:transparent;cursor:pointer;margin:0 auto;display:flex;align-items:center;justify-content:center;transition:all 0.15s;font-size:10px;}
+.habit-dot:hover{border-color:var(--green);background:var(--green-dim);}
+.habit-dot.done{background:var(--green);border-color:var(--green);}
+.habit-dot.done::after{content:'✓';color:#000;font-size:10px;font-weight:700;}
+.habit-dot.future{opacity:0.3;cursor:default;pointer-events:none;}
+
+.habit-row-label{font-size:12px;color:var(--text2);text-align:left;padding:4px 8px 4px 0;white-space:nowrap;}
+.habit-emoji-sm{font-size:13px;margin-right:4px;}
+
+/* CHART */
+.chart-section{margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
+.chart-title{font-size:12px;color:var(--text3);font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px;}
+.chart-wrap{position:relative;height:120px;}
+canvas.habit-chart{width:100%!important;height:120px!important;}
+
+/* MILESTONE */
+.milestone{background:var(--surface2);border:1px solid var(--blue-mid);border-radius:var(--radius);padding:20px;margin-bottom:12px;position:relative;overflow:hidden;}
+.milestone::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--blue),transparent);}
+.milestone-green{border-color:var(--green-mid);}
+.milestone-green::before{background:linear-gradient(90deg,var(--green),transparent);}
+.milestone-tag{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;font-family:'Syne',sans-serif;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em;}
+.tag-blue{background:var(--blue-dim);color:var(--blue);}
+.tag-green{background:var(--green-dim);color:var(--green);}
+.milestone-title{font-size:18px;font-weight:800;font-family:'Syne',sans-serif;margin-bottom:4px;}
+.milestone-sub{font-size:13px;color:var(--text2);}
+
+/* TIP */
+.tip{border-left:2px solid var(--amber);background:var(--amber-dim);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:14px 16px;margin-top:12px;}
+.tip-title{font-size:13px;font-weight:600;color:var(--amber);font-family:'Syne',sans-serif;margin-bottom:4px;}
+.tip-body{font-size:13px;color:var(--text2);line-height:1.6;}
+
+.divider{border:none;border-top:1px solid var(--border);margin:28px 0;}
+.footer-note{text-align:center;font-size:12px;color:var(--text3);margin-top:48px;font-family:'Syne',sans-serif;}
+
+@media(max-width:480px){
+  .app{padding:20px 16px 60px;}
+  .stats-row{grid-template-columns:repeat(2,1fr);}
+  .workout-grid{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-top">
+    <div>
+      <h1 class="header-title">Mi sistema<br><span>de vida</span></h1>
+      <p class="header-sub">Trading · Físico · Hábitos — Abril → Julio 2025</p>
+    </div>
+    <div class="date-badge" id="live-date">—</div>
+  </div>
+</div>
+
+<!-- MONTH TABS -->
+<div class="month-nav">
+  <button class="month-btn active" onclick="showMonth('abril',this)">Abril</button>
+  <button class="month-btn" onclick="showMonth('mayo',this)">Mayo</button>
+  <button class="month-btn" onclick="showMonth('junio',this)">Junio</button>
+  <button class="month-btn" onclick="showMonth('julio',this)">Julio ★</button>
+</div>
+
+<!-- ═══════════ ABRIL ═══════════ -->
+<div id="abril" class="month-view show">
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-label">Meta trading</div><div class="stat-value blue">10k</div><div class="stat-sub">Challenge en julio</div></div>
+    <div class="stat-card"><div class="stat-label">Peso objetivo</div><div class="stat-value green">-1.5kg</div><div class="stat-sub">Este mes</div></div>
+    <div class="stat-card"><div class="stat-label">Backtest</div><div class="stat-value amber" id="bt-stat">0/12</div><div class="stat-sub">Sesiones</div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon icon-blue">📈</div>
+      <h2 class="section-title">Trading</h2>
+      <div class="section-meta">Preparar y lanzar el challenge</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Subobjetivos de abril</div>
+      <div class="obj-list" id="ta-list"></div>
+      <button class="add-obj-btn" onclick="addObj('ta','blue')">+ Añadir objetivo</button>
+      <div class="progress-section">
+        <div class="progress-row">
+          <span class="progress-label" id="ta-note">—</span>
+          <span class="progress-pct pct-blue" id="ta-pct">—</span>
+        </div>
+        <div class="track"><div class="fill fill-blue" id="ta-bar" style="width:0%"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon icon-green">💪</div>
+      <h2 class="section-title">Físico</h2>
+      <div class="section-meta">Rutina sólida + -1.5kg</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Subobjetivos de abril</div>
+      <div class="obj-list" id="fa-list"></div>
+      <button class="add-obj-btn" onclick="addObj('fa','green')">+ Añadir objetivo</button>
+      <div class="progress-section">
+        <div class="progress-row">
+          <span class="progress-label" id="fa-note">—</span>
+          <span class="progress-pct pct-green" id="fa-pct">—</span>
+        </div>
+        <div class="track"><div class="fill fill-green" id="fa-bar" style="width:0%"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HÁBITOS -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon icon-amber">🔥</div>
+      <h2 class="section-title">Hábitos diarios</h2>
+    </div>
+    <div class="habit-tracker-wrap">
+      <div class="habit-tracker-header">
+        <div class="habit-tracker-title">Tracker mensual</div>
+        <div class="month-selector">
+          <button class="month-arrow" onclick="changeTrackerMonth(-1)">‹</button>
+          <div class="month-display" id="tracker-month-label">Abril 2025</div>
+          <button class="month-arrow" onclick="changeTrackerMonth(1)">›</button>
+        </div>
+      </div>
+      <div class="habit-grid-wrap">
+        <table class="habit-table" id="habit-table"></table>
+      </div>
+      <div class="chart-section">
+        <div class="chart-title">Hábitos completados por día</div>
+        <div class="chart-wrap">
+          <canvas id="habit-chart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WORKOUT -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon icon-green">⚡</div>
+      <h2 class="section-title">Rutina Upper / Lower</h2>
+      <div class="section-meta">Edita tus pesos directamente</div>
+    </div>
+    <div class="workout-grid" id="workout-grid"></div>
+  </div>
+</div>
+
+<!-- ═══════════ MAYO ═══════════ -->
+<div id="mayo" class="month-view">
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-label">Estado</div><div class="stat-value blue" style="font-size:15px">Challenge activo</div></div>
+    <div class="stat-card"><div class="stat-label">Peso objetivo</div><div class="stat-value green">-2kg</div><div class="stat-sub">Acum: ~3.5kg</div></div>
+    <div class="stat-card"><div class="stat-label">Enfoque</div><div class="stat-value amber" style="font-size:15px">Disciplina</div></div>
+  </div>
+  <div class="section">
+    <div class="section-header"><div class="section-icon icon-blue">📈</div><h2 class="section-title">Trading</h2><div class="section-meta">Pasar el challenge</div></div>
+    <div class="card">
+      <div class="card-title">Subobjetivos de mayo</div>
+      <div class="obj-list" id="tm-list"></div>
+      <button class="add-obj-btn" onclick="addObj('tm','blue')">+ Añadir objetivo</button>
+      <div class="progress-section">
+        <div class="progress-row"><span class="progress-label" id="tm-note">—</span><span class="progress-pct pct-blue" id="tm-pct">—</span></div>
+        <div class="track"><div class="fill fill-blue" id="tm-bar" style="width:0%"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-header"><div class="section-icon icon-green">💪</div><h2 class="section-title">Físico</h2><div class="section-meta">Progreso visible</div></div>
+    <div class="card">
+      <div class="card-title">Subobjetivos de mayo</div>
+      <div class="obj-list" id="fm-list"></div>
+      <button class="add-obj-btn" onclick="addObj('fm','green')">+ Añadir objetivo</button>
+      <div class="progress-section">
+        <div class="progress-row"><span class="progress-label" id="fm-note">—</span><span class="progress-pct pct-green" id="fm-pct">—</span></div>
+        <div class="track"><div class="fill fill-green" id="fm-bar" style="width:0%"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="tip"><div class="tip-title">Consejo clave para mayo</div><div class="tip-body">Si el challenge va mal una semana, no lo abandones. El trading no es lineal. Lo que mide el challenge es disciplina, no suerte. Un mal día con las reglas respetadas es un día ganado.</div></div>
+</div>
+
+<!-- ═══════════ JUNIO ═══════════ -->
+<div id="junio" class="month-view">
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-label">Trading</div><div class="stat-value blue" style="font-size:14px">Consolidar</div><div class="stat-sub">o reintentar</div></div>
+    <div class="stat-card"><div class="stat-label">Peso objetivo</div><div class="stat-value green">-2kg</div><div class="stat-sub">Acum: ~5-6kg</div></div>
+    <div class="stat-card"><div class="stat-label">Físico</div><div class="stat-value green" style="font-size:14px">Definición</div><div class="stat-sub">empezando a verse</div></div>
+  </div>
+  <div class="section">
+    <div class="section-header"><div class="section-icon icon-blue">📈</div><h2 class="section-title">Trading</h2><div class="section-meta">Consolidar o reintentar</div></div>
+    <div class="card">
+      <div class="card-title">Subobjetivos de junio</div>
+      <div class="obj-list" id="tj-list"></div>
+      <button class="add-obj-btn" onclick="addObj('tj','blue')">+ Añadir objetivo</button>
+      <div class="progress-section">
+        <div class="progress-row"><span class="progress-label" id="tj-note">—</span><span class="progress-pct pct-blue" id="tj-pct">—</span></div>
+        <div class="track"><div class="fill fill-blue" id="tj-bar" style="width:0%"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-header"><div class="section-icon icon-green">💪</div><h2 class="section-title">Físico</h2><div class="section-meta">Punto de no retorno</div></div>
+    <div class="card">
+      <div class="card-title">Subobjetivos de junio</div>
+      <div class="obj-list" id="fj-list"></div>
+      <button class="add-obj-btn" onclick="addObj('fj','green')">+ Añadir objetivo</button>
+      <div class="progress-section">
+        <div class="progress-row"><span class="progress-label" id="fj-note">—</span><span class="progress-pct pct-green" id="fj-pct">—</span></div>
+        <div class="track"><div class="fill fill-green" id="fj-bar" style="width:0%"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ JULIO ═══════════ -->
+<div id="julio" class="month-view">
+  <div class="milestone">
+    <div class="milestone-tag tag-blue">Meta final · Trading</div>
+    <div class="milestone-title">Cuenta fondeada 10k activa</div>
+    <div class="milestone-sub">El objetivo que te pusiste cuando no veías cómo conseguirlo. Aquí se cumple.</div>
+  </div>
+  <div class="section" style="margin-top:20px">
+    <div class="section-header"><div class="section-icon icon-blue">📈</div><h2 class="section-title">Trading</h2><div class="section-meta">La meta principal</div></div>
+    <div class="card">
+      <div class="card-title">Hitos de julio</div>
+      <div class="obj-list" id="tju-list"></div>
+      <button class="add-obj-btn" onclick="addObj('tju','blue')">+ Añadir objetivo</button>
+      <div class="progress-section">
+        <div class="progress-row"><span class="progress-label" id="tju-note">—</span><span class="progress-pct pct-blue" id="tju-pct">—</span></div>
+        <div class="track"><div class="fill fill-blue" id="tju-bar" style="width:0%"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="milestone milestone-green" style="margin-top:8px">
+    <div class="milestone-tag tag-green">Meta final · Físico</div>
+    <div class="milestone-title">El físico que siempre quisiste</div>
+    <div class="milestone-sub">4 meses de trabajo acumulado. Aquí ya no hay vuelta atrás.</div>
+  </div>
+  <div class="section" style="margin-top:20px">
+    <div class="section-header"><div class="section-icon icon-green">💪</div><h2 class="section-title">Físico</h2><div class="section-meta">Transformación completada</div></div>
+    <div class="card">
+      <div class="card-title">Hitos de julio</div>
+      <div class="obj-list" id="fju-list"></div>
+      <button class="add-obj-btn" onclick="addObj('fju','green')">+ Añadir objetivo</button>
+      <div class="progress-section">
+        <div class="progress-row"><span class="progress-label" id="fju-note">—</span><span class="progress-pct pct-green" id="fju-pct">—</span></div>
+        <div class="track"><div class="fill fill-green" id="fju-bar" style="width:0%"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="tip"><div class="tip-title">Julio no es el fin, es el despegue</div><div class="tip-body">Con una cuenta fondeada activa y un físico transformado, habrás demostrado algo que vale más que los dos resultados juntos: que eres capaz de comprometerte con algo difícil durante meses y no rendirte. Eso se lleva a todo lo demás en la vida.</div></div>
+</div>
+
+<div class="footer-note">Mi sistema de vida · Haz clic para editar cualquier texto · No dependas de la motivación, depende del sistema.</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+// ─── STATE ───────────────────────────────────────────────────────────────────
+const HABITS = [
+  {id:'agua', emoji:'💧', name:'2L agua'},
+  {id:'backtest', emoji:'📈', name:'Backtest'},
+  {id:'journal', emoji:'📔', name:'Journal'},
+  {id:'entreno', emoji:'🏋️', name:'Entreno'},
+  {id:'leer', emoji:'📖', name:'Leer'},
+  {id:'rezar', emoji:'🙏', name:'Rezar'},
+];
+
+const WORKOUT_DATA = [
+  {title:'Upper A', focus:'Pecho · Espalda', exercises:[
+    {name:'Bench press', sets:'3×6-8'},
+    {name:'Chest-Supported Row', sets:'3×8-10'},
+    {name:'Incline DB Press', sets:'2×8-10'},
+    {name:'Lat Pulldown', sets:'2×10-12'},
+    {name:'Lateral Raises', sets:'2×12-15'},
+    {name:'Triceps Pushdown', sets:'2×10-12'},
+    {name:'Biceps Curls', sets:'2×10-12'},
+  ]},
+  {title:'Lower A', focus:'Cuádriceps · Glúteos', exercises:[
+    {name:'Squat / Leg Press', sets:'3×6-8'},
+    {name:'Romanian Deadlift', sets:'3×8-10'},
+    {name:'Walking Lunges', sets:'2×10-12'},
+    {name:'Leg Curl', sets:'2×10-12'},
+    {name:'Calf Raises', sets:'2×12-15'},
+  ]},
+  {title:'Upper B', focus:'Hombros · Brazos', exercises:[
+    {name:'Incline DB Press', sets:'3×8-10'},
+    {name:'Seated Cable Row', sets:'3×8-10'},
+    {name:'Shoulder Press', sets:'2×8-10'},
+    {name:'Lat Pulldown', sets:'2×10-12'},
+    {name:'Lateral Raises', sets:'3×12-15'},
+    {name:'Overhead Triceps Ext', sets:'2×10-12'},
+    {name:'Hammer Curls', sets:'2×10-12'},
+  ]},
+  {title:'Lower B', focus:'Glúteos · Isquiotibiales', exercises:[
+    {name:'Trap Bar Deadlift', sets:'2×5'},
+    {name:'Leg Press (pies arriba)', sets:'3×10-12'},
+    {name:'Bulgarian Split Squat', sets:'2×8-12'},
+    {name:'Leg Curl', sets:'2×10-12'},
+    {name:'Calf Raises', sets:'2×12-15'},
+  ]},
+];
+
+const OBJECTIVES = {
+  'ta': {color:'blue', items:[
+    {text:'Dejar flujo claro de la estrategia', detail:'Completado ✓', done:true},
+    {text:'Crear journal de trading', detail:'Completado ✓', done:true},
+    {text:'1 mes de backtest diarios — 2025', detail:'Meta: 12 sesiones completadas', done:false},
+    {text:'Comprar challenge 10k', detail:'Investigar: FTMO, E8 Funding, The Funded Trader', done:false},
+    {text:'Definir reglas de gestión de riesgo', detail:'Máx % por trade · drawdown diario · condiciones de entrada', done:false},
+  ]},
+  'fa': {color:'green', items:[
+    {text:'Entrenar 4x/semana sin fallar', detail:'Upper A · Lower A · Upper B · Lower B', done:false},
+    {text:'Bajar 1.5 kg', detail:'Déficit moderado — sin sacrificar rendimiento en el gym', done:false},
+    {text:'Registrar comida diariamente', detail:'MyFitnessPal o similar', done:false},
+    {text:'Foto de inicio — día 1 de abril', detail:'Misma luz, misma posición. La usarás en julio para motivarte', done:false},
+  ]},
+  'tm': {color:'blue', items:[
+    {text:'Iniciar el challenge 10k', detail:'Operar con la estrategia testeada, sin improvisar', done:false},
+    {text:'Respetar reglas de riesgo al 100%', detail:'Sin saltarse stops · Sin revenge trading', done:false},
+    {text:'Completar journal cada sesión', detail:'Entrada · salida · motivo · resultado · lección', done:false},
+    {text:'Revisión semanal de operaciones', detail:'¿Qué falló? ¿Qué se puede mejorar?', done:false},
+  ]},
+  'fm': {color:'green', items:[
+    {text:'Bajar 2 kg más', detail:'Acumulado desde abril: ~3.5 kg total', done:false},
+    {text:'Subir cargas en al menos 3 ejercicios', detail:'Progresión de fuerza = músculo mantenido en déficit', done:false},
+    {text:'Foto comparación semana 1 vs semana 4', detail:'Misma luz, misma posición', done:false},
+  ]},
+  'tj': {color:'blue', items:[
+    {text:'Si aprobaste: operar fase 2 con mismas reglas', detail:'Mismo sistema, misma disciplina', done:false},
+    {text:'Si fallaste: analizar por qué y reintentar', detail:'¿Fue disciplina o estrategia? Ajustar solo lo necesario', done:false},
+    {text:'Aumentar volumen de backtesting', detail:'Testear meses adicionales para más robustez estadística', done:false},
+  ]},
+  'fj': {color:'green', items:[
+    {text:'Bajar 2 kg más', detail:'Acumulado ~5-6 kg desde inicio', done:false},
+    {text:'Evaluar y ajustar calorías si hay estancamiento', detail:'El cuerpo se adapta — pequeños ajustes cada 4 semanas', done:false},
+    {text:'Definición abdominal empezando a aparecer', detail:'Referencia visual de progreso', done:false},
+  ]},
+  'tju': {color:'blue', items:[
+    {text:'Cuenta fondeada 10k aprobada y activa', detail:'La meta que lo inició todo', done:false},
+    {text:'Primera retirada de beneficios', detail:'Aunque sea pequeña — valida que el sistema funciona', done:false},
+    {text:'Definir siguiente escala: 25k o 50k', detail:'El 10k es el primero, no el último', done:false},
+  ]},
+  'fju': {color:'green', items:[
+    {text:'-6 a -8 kg de grasa desde inicio', detail:'Con músculo mantenido — el físico funcional que buscabas', done:false},
+    {text:'Foto de comparación final — inicio vs julio', detail:'Este momento hace que mereciera la pena cada día difícil', done:false},
+    {text:'Planificar siguiente fase: volumen o mantenimiento', detail:'Julio es el final del corte, no el final del camino', done:false},
+  ]},
+};
+
+// habit data: {year-month: {habitId: {day: true/false}}}
+let habitData = {};
+let trackerYear = new Date().getFullYear();
+let trackerMonth = new Date().getMonth(); // 0-indexed
+let habitChart = null;
+let workoutWeights = {}; // {dayTitle-exName: weight}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  loadState();
+  const d = new Date();
+  const months = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  document.getElementById('live-date').textContent = d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+  Object.keys(OBJECTIVES).forEach(prefix => renderObjList(prefix));
+  renderWorkout();
+  renderHabitTracker();
+});
+
+// ─── PERSIST ──────────────────────────────────────────────────────────────────
+function saveState() {
+  try {
+    localStorage.setItem('msv_objs', JSON.stringify(OBJECTIVES));
+    localStorage.setItem('msv_habits', JSON.stringify(habitData));
+    localStorage.setItem('msv_weights', JSON.stringify(workoutWeights));
+  } catch(e){}
+}
+function loadState() {
+  try {
+    const o = localStorage.getItem('msv_objs');
+    if (o) { const parsed = JSON.parse(o); Object.assign(OBJECTIVES, parsed); }
+    const h = localStorage.getItem('msv_habits');
+    if (h) habitData = JSON.parse(h);
+    const w = localStorage.getItem('msv_weights');
+    if (w) workoutWeights = JSON.parse(w);
+  } catch(e){}
+}
+
+// ─── MONTH NAV ────────────────────────────────────────────────────────────────
+function showMonth(id, btn) {
+  document.querySelectorAll('.month-view').forEach(m => m.classList.remove('show'));
+  document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('show');
+  btn.classList.add('active');
+}
+
+// ─── OBJECTIVES ───────────────────────────────────────────────────────────────
+function renderObjList(prefix) {
+  const list = document.getElementById(prefix + '-list');
+  if (!list) return;
+  list.innerHTML = '';
+  const data = OBJECTIVES[prefix];
+  data.items.forEach((item, idx) => {
+    const el = document.createElement('div');
+    el.className = 'obj-item' + (item.done ? ' checked' : '');
+    el.innerHTML = `
+      <div class="chk ${data.color}${item.done ? ' on' : ''}" onclick="toggleObj('${prefix}',${idx},this)">
+        <svg viewBox="0 0 10 8" fill="none"><polyline points="1,4 4,7 9,1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="obj-content">
+        <div class="obj-text" contenteditable="true" spellcheck="false" onblur="editObj('${prefix}',${idx},'text',this.innerText)">${item.text}</div>
+        <div class="obj-detail" contenteditable="true" spellcheck="false" onblur="editObj('${prefix}',${idx},'detail',this.innerText)">${item.detail}</div>
+      </div>
+      <button class="del-btn" onclick="delObj('${prefix}',${idx})" title="Eliminar">✕</button>`;
+    list.appendChild(el);
+  });
+  updateProgress(prefix);
+}
+
+function toggleObj(prefix, idx, chkEl) {
+  OBJECTIVES[prefix].items[idx].done = !OBJECTIVES[prefix].items[idx].done;
+  const item = OBJECTIVES[prefix].items[idx];
+  const objItem = chkEl.closest('.obj-item');
+  chkEl.classList.toggle('on', item.done);
+  objItem.classList.toggle('checked', item.done);
+  updateProgress(prefix);
+  saveState();
+}
+
+function editObj(prefix, idx, field, val) {
+  OBJECTIVES[prefix].items[idx][field] = val.trim();
+  saveState();
+}
+
+function addObj(prefix, color) {
+  OBJECTIVES[prefix].items.push({text:'Nuevo objetivo', detail:'Detalle...', done:false});
+  renderObjList(prefix);
+  saveState();
+  // focus new item
+  const list = document.getElementById(prefix + '-list');
+  const last = list.lastElementChild;
+  if (last) {
+    const txt = last.querySelector('.obj-text');
+    if (txt) { txt.focus(); document.execCommand('selectAll'); }
+  }
+}
+
+function delObj(prefix, idx) {
+  OBJECTIVES[prefix].items.splice(idx, 1);
+  renderObjList(prefix);
+  saveState();
+}
+
+function updateProgress(prefix) {
+  const data = OBJECTIVES[prefix];
+  const total = data.items.length;
+  const done = data.items.filter(i => i.done).length;
+  const pct = total === 0 ? 0 : Math.round(done / total * 100);
+  const bar = document.getElementById(prefix + '-bar');
+  const note = document.getElementById(prefix + '-note');
+  const pctEl = document.getElementById(prefix + '-pct');
+  if (bar) bar.style.width = pct + '%';
+  if (note) note.textContent = done + ' de ' + total + ' completados';
+  if (pctEl) pctEl.textContent = pct + '%';
+}
+
+// ─── WORKOUT ──────────────────────────────────────────────────────────────────
+function renderWorkout() {
+  const grid = document.getElementById('workout-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  WORKOUT_DATA.forEach(day => {
+    const card = document.createElement('div');
+    card.className = 'workout-day';
+    let exHtml = day.exercises.map(ex => {
+      const key = day.title + '|' + ex.name;
+      const saved = workoutWeights[key] || '';
+      return `<div class="exercise-row">
+        <div class="ex-name">${ex.name}</div>
+        <div class="ex-sets">${ex.sets}</div>
+        <div class="ex-weight-row">
+          <span class="ex-weight-label">Peso:</span>
+          <input class="ex-weight-input" type="text" placeholder="ej: 20kg" value="${saved}"
+            onchange="saveWeight('${day.title}','${ex.name}',this.value)"
+            onblur="saveWeight('${day.title}','${ex.name}',this.value)">
+          <span class="ex-weight-unit"></span>
+        </div>
+      </div>`;
+    }).join('');
+    card.innerHTML = `<div class="workout-day-title">${day.title}</div><div class="workout-day-focus">${day.focus}</div>${exHtml}`;
+    grid.appendChild(card);
+  });
+}
+
+function saveWeight(dayTitle, exName, val) {
+  workoutWeights[dayTitle + '|' + exName] = val;
+  saveState();
+}
+
+// ─── HABIT TRACKER ────────────────────────────────────────────────────────────
+function trackerKey() {
+  return trackerYear + '-' + String(trackerMonth + 1).padStart(2,'0');
+}
+
+function getHabitVal(habitId, day) {
+  const k = trackerKey();
+  return !!(habitData[k] && habitData[k][habitId] && habitData[k][habitId][day]);
+}
+
+function setHabitVal(habitId, day, val) {
+  const k = trackerKey();
+  if (!habitData[k]) habitData[k] = {};
+  if (!habitData[k][habitId]) habitData[k][habitId] = {};
+  habitData[k][habitId][day] = val;
+  saveState();
+}
+
+function changeTrackerMonth(dir) {
+  trackerMonth += dir;
+  if (trackerMonth > 11) { trackerMonth = 0; trackerYear++; }
+  if (trackerMonth < 0) { trackerMonth = 11; trackerYear--; }
+  renderHabitTracker();
+}
+
+function renderHabitTracker() {
+  const monthNames = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  document.getElementById('tracker-month-label').textContent = monthNames[trackerMonth] + ' ' + trackerYear;
+
+  const daysInMonth = new Date(trackerYear, trackerMonth + 1, 0).getDate();
+  const today = new Date();
+  const isCurrentMonth = today.getFullYear() === trackerYear && today.getMonth() === trackerMonth;
+  const todayDay = today.getDate();
+
+  const table = document.getElementById('habit-table');
+  // Header: habit names
+  let html = '<thead><tr><th class="habit-name-col">Hábito</th>';
+  for (let d = 1; d <= daysInMonth; d++) html += `<th>${d}</th>`;
+  html += '</tr></thead><tbody>';
+
+  HABITS.forEach(habit => {
+    html += `<tr><td class="habit-row-label"><span class="habit-emoji-sm">${habit.emoji}</span>${habit.name}</td>`;
+    for (let d = 1; d <= daysInMonth; d++) {
+      const done = getHabitVal(habit.id, d);
+      const isFuture = isCurrentMonth && d > todayDay;
+      const cls = done ? 'habit-dot done' : (isFuture ? 'habit-dot future' : 'habit-dot');
+      const click = isFuture ? '' : `onclick="toggleHabit('${habit.id}',${d},this)"`;
+      html += `<td><div class="${cls}" ${click}></div></td>`;
+    }
+    html += '</tr>';
+  });
+  html += '</tbody>';
+  table.innerHTML = html;
+  updateHabitChart(daysInMonth, isCurrentMonth, todayDay);
+}
+
+function toggleHabit(habitId, day, el) {
+  const isDone = el.classList.contains('done');
+  setHabitVal(habitId, day, !isDone);
+  el.classList.toggle('done');
+  if (!isDone) el.classList.add('done'); else el.classList.remove('done');
+  // re-render dot state
+  el.classList.toggle('done', !isDone);
+  updateHabitChart(new Date(trackerYear, trackerMonth+1,0).getDate(), new Date().getFullYear()===trackerYear&&new Date().getMonth()===trackerMonth, new Date().getDate());
+}
+
+function updateHabitChart(daysInMonth, isCurrentMonth, todayDay) {
+  const labels = [];
+  const values = [];
+  const maxDay = isCurrentMonth ? todayDay : daysInMonth;
+  for (let d = 1; d <= maxDay; d++) {
+    labels.push(d);
+    let count = 0;
+    HABITS.forEach(h => { if (getHabitVal(h.id, d)) count++; });
+    values.push(count);
+  }
+
+  const ctx = document.getElementById('habit-chart').getContext('2d');
+  if (habitChart) habitChart.destroy();
+  habitChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: values.map(v => v >= 5 ? 'rgba(78,203,113,0.8)' : v >= 3 ? 'rgba(74,158,255,0.7)' : 'rgba(240,160,48,0.6)'),
+        borderRadius: 4,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {display: false},
+        tooltip: {
+          callbacks: {
+            label: ctx => ctx.parsed.y + ' de 6 hábitos',
+            title: ctx => 'Día ' + ctx[0].label,
+          },
+          backgroundColor: '#18181c',
+          titleColor: '#f0eee8',
+          bodyColor: '#888580',
+          borderColor: 'rgba(255,255,255,0.12)',
+          borderWidth: 1,
+        }
+      },
+      scales: {
+        x: {
+          grid: {color: 'rgba(255,255,255,0.04)'},
+          ticks: {color: '#555350', font: {size: 10}},
+        },
+        y: {
+          min: 0, max: 6,
+          grid: {color: 'rgba(255,255,255,0.04)'},
+          ticks: {color: '#555350', font: {size: 10}, stepSize: 1},
+        }
+      }
+    }
+  });
+}
+</script>
+</body>
+</html>
